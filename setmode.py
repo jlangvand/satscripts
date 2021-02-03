@@ -21,7 +21,7 @@ from serial import Serial
 
 from setup import get_serialdevice, ping
 
-version = "setmode.py v0.1"
+version = "setmode.py v0.2"
 
 FEND = b'\xc0'
 FESC = b'\xdb'
