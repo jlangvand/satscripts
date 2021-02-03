@@ -6,7 +6,7 @@ For testing and debugging purposes.
 > Always make sure there's a properly sized 50Ω load connected to the RF output!
 ____
 ## Usage
-`$ python setmode.py [-h|-v] --mode=<0...2> --power=<-16...6> --port=/path/to/interface
+`$ python setmode.py [-h|-v] --mode=<0...2> --power=<-16...6> --port=/path/to/interface`
 
 ### Mode
 0 = Packet receive (default), 1 = Transparent receive, 2 = continuous transmit (beacon).
