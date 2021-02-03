@@ -28,11 +28,32 @@ FESC = b'\xdb'
 TFEND = b'\xdc'
 TFESC = b'\xdd'
 
-def bytes_to_str(bytes_in):
+SET_MODE = b'\x29'
+SET_POWER = b'\x22'
+
+
+def int8(i: int) -> bytes:
+    """
+    Takes a signed integer and returns the 8-bit representation of it.
+
+    :param i: Signed integer
+    :return: Single byte representation
+    """
+    return int.to_bytes(i, length=1, byteorder="little", signed=True)
+
+
+def bytes_to_str(bytes_in: bytes) -> str:
+    """
+    Returns a human readable hex representation of a byte array.
+
+    :param bytes_in: Bytes to convert
+    :return: Human readable hex representation
+    """
     str_out = ""
     for b in bytes_in:
         str_out += hex(b) + " "
     return str_out
+
 
 def escape_special_codes(raw_codes):
     """
@@ -59,8 +80,7 @@ def escape_special_codes(raw_codes):
         print('Special codes encoded.')
         return out
     except TypeError:
-        print('Invalid data: %s', raw_codes, exc_info=True)
-        raise KissError('Invalid data: %s', raw_codes)
+        print('Invalid data: %s', raw_codes)
 
 
 def help():
@@ -89,15 +109,18 @@ def help():
     print("  setmode.py --mode=2 --power=6 --port=/dev/ttyUSB0")
     print("")
 
+
 def write_to_radio(radio: Serial, data: bytes):
     out = FEND + escape_special_codes(data) + FEND
     print("Writing bytes to radio:")
     print(bytes_to_str(out))
     radio.write(out)
 
-def print_response():
+
+def print_response(radio: Serial):
     print("Response from radio:")
-    print(radio.read(radio.in_waiting))
+    print(bytes_to_str(radio.read(radio.in_waiting)))
+
 
 def main(argv):
     mode = -100
@@ -105,7 +128,7 @@ def main(argv):
     port = ""
 
     try:
-        opts, args = getopt.getopt(argv,"h:v:",["mode=","power=","port="])
+        opts, args = getopt.getopt(argv, "h:v:", ["mode=", "power=", "port="])
 
     except getopt.GetoptError:
         help()
@@ -145,14 +168,13 @@ def main(argv):
 
     print("Setting mode=" + str(mode) + ", power=" + str(power))
 
-    write_to_radio(radio, b'\x29' + bytes([mode]))
-    write_to_radio(radio, b'\x22' + bytes([power]))
+    write_to_radio(radio, SET_MODE + int8(mode))
+    write_to_radio(radio, SET_POWER + int8(power))
 
-    print("Response from radio:")
-    response = bytes_to_str(radio.read(1024))
-    print(response)
+    print_response(radio)
 
     sys.exit()
 
+
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
