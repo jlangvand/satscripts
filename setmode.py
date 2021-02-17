@@ -119,7 +119,7 @@ def write_to_radio(radio: Serial, data: bytes):
 
 def print_response(radio: Serial):
     print("Response from radio:")
-    print(bytes_to_str(radio.read(radio.in_waiting)))
+    print(bytes_to_str(radio.readall()))
 
 
 def main(argv):
