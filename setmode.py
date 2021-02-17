@@ -16,23 +16,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import sys, getopt
+import sys
+import getopt
 from serial import Serial
 
 from setup import get_serialdevice, ping
 
-version = "setmode.py v0.1"
+version = "setmode.py v0.2"
 
 FEND = b'\xc0'
 FESC = b'\xdb'
 TFEND = b'\xdc'
 TFESC = b'\xdd'
 
+
 def bytes_to_str(bytes_in):
     str_out = ""
+    str_out
     for b in bytes_in:
         str_out += hex(b) + " "
     return str_out
+
 
 def escape_special_codes(raw_codes):
     """
@@ -45,22 +49,17 @@ def escape_special_codes(raw_codes):
 
     :return: Data with escaped special codes (bytestring)
     """
-    try:
-        out = bytearray()
-        for b in raw_codes:
-            if b == FEND:
-                out.append(FESC)
-                out.append(TFEND)
-            elif b == FESC:
-                out.append(b)
-                out.append(TFESC)
-            else:
-                out.append(b)
-        print('Special codes encoded.')
-        return out
-    except TypeError:
-        print('Invalid data: %s', raw_codes, exc_info=True)
-        raise KissError('Invalid data: %s', raw_codes)
+    out = bytearray()
+    for b in raw_codes:
+        if b == FEND:
+            out.append(FESC)
+            out.append(TFEND)
+        elif b == FESC:
+            out.append(b)
+            out.append(TFESC)
+        else:
+            out.append(b)
+    return out
 
 
 def help():
@@ -89,15 +88,18 @@ def help():
     print("  setmode.py --mode=2 --power=6 --port=/dev/ttyUSB0")
     print("")
 
+
 def write_to_radio(radio: Serial, data: bytes):
     out = FEND + escape_special_codes(data) + FEND
     print("Writing bytes to radio:")
     print(bytes_to_str(out))
     radio.write(out)
 
-def print_response():
+
+def print_response(radio: Serial) -> None:
     print("Response from radio:")
-    print(radio.read(radio.in_waiting))
+    print(bytes_to_str(radio.readall()))
+
 
 def main(argv):
     mode = -100
@@ -149,9 +151,8 @@ def main(argv):
     write_to_radio(radio, b'\x22' + bytes([power]))
 
     print("Response from radio:")
-    response = bytes_to_str(radio.read(1024))
-    print(response)
-
+    print_response()
+    
     sys.exit()
 
 if __name__ == "__main__":
