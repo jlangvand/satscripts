@@ -161,7 +161,7 @@ def main(argv):
     port: str = ""
     server: bool = False
     dump: bool = False
-    freq: float = 435.000
+    freq: float = 436.000
 
     try:
         opts, args = getopt.getopt(argv,
@@ -223,7 +223,9 @@ def main(argv):
 
     radio = get_serialdevice(port)
 
-    print("Setting mode=" + str(mode) + ", power=" + str(power))
+    print("Mode=" + str(mode))
+    print("Power=" + str(power))
+    print("Freq=" + str(freq))
 
     write_to_radio(radio, SET_MODE + int8(mode))
     write_to_radio(radio, SET_POWER + int8(power))
