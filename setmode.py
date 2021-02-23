@@ -153,7 +153,7 @@ def raw_dump(radio: Serial) -> None:
             temp = None
     except KeyboardInterrupt:
         sys.exit(0)
-
+        
 
 def main(argv):
     mode: int = 0
