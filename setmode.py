@@ -19,7 +19,7 @@
 import sys
 import getopt
 from serial import Serial
-from socket import socket, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 
 from setup import get_serialdevice
 
@@ -126,15 +126,19 @@ def print_response(radio: Serial) -> None:
 
 def tcp_listener(radio: Serial) -> None:
     s = socket(AF_INET, SOCK_STREAM)
+    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     s.bind((TCP_ADDR, TCP_PORT))
     s.listen(1)
-    print("Listening on TCP port " + TCP_PORT)
-    conn, addr = s.accept()
-    print("Client connected: " + addr)
-    data = conn.recv(BUFFER_SIZE)
-    print("Received data: " + bytes_to_str(data))
-    write_to_radio(radio, b'\x00' + data)
-    print("TCP server done")
+    try:
+        while True:
+            print("Listening on TCP port " + str(TCP_PORT))
+            conn, addr = s.accept()
+            print("Client connected: " + str(addr))
+            data = conn.recv(BUFFER_SIZE)
+            print("Received data: " + bytes_to_str(data))
+            write_to_radio(radio, b'\x00' + data)
+    except KeyboardInterrupt:
+        print("TCP server done")
     s.close()
 
 
