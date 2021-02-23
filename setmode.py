@@ -24,7 +24,7 @@ from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from setup import get_serialdevice
 from utilities import encode_freq
 
-VERSION = "setmode.py v0.3"
+VERSION = "setmode.py v0.4.0"
 
 TCP_PORT: int = 2022
 TCP_ADDR: str = "127.0.0.1"
@@ -153,7 +153,7 @@ def raw_dump(radio: Serial) -> None:
             temp = None
     except KeyboardInterrupt:
         sys.exit(0)
-        
+
 
 def main(argv):
     mode: int = 0
@@ -162,17 +162,17 @@ def main(argv):
     server: bool = False
     dump: bool = False
     freq: float = 436.000
+    arguments = ["mode=",
+                 "power=",
+                 "port=",
+                 "freq=",
+                 "server",
+                 "dump",
+                 ]
 
     try:
-        opts, args = getopt.getopt(argv,
-                                   "h:v:s:",
-                                   ["mode=",
-                                    "power=",
-                                    "port=",
-                                    "freq=",
-                                    "server",
-                                    "dump",
-                                    ])
+        opts, args = getopt.getopt(argv, "h:v:s:", arguments)
+        del args
 
     except getopt.GetoptError:
         help()
