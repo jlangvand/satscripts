@@ -20,21 +20,42 @@ import sys
 import getopt
 from serial import Serial
 
-from setup import get_serialdevice, ping
+from setup import get_serialdevice
 
-version = "setmode.py v0.2"
+VERSION = "setmode.py v0.3"
+
+TCP_PORT: int = 2022
+TCP_ADDR: str = "127.0.0.1"
 
 FEND = b'\xc0'
 FESC = b'\xdb'
 TFEND = b'\xdc'
 TFESC = b'\xdd'
 
+SET_MODE = b'\x29'
+SET_POWER = b'\x22'
 
-def bytes_to_str(bytes_in):
+
+def int8(i: int) -> bytes:
+    """
+    Takes a signed integer and returns the 8-bit representation of it.
+
+    :param i: Signed integer
+    :return: Single byte representation
+    """
+    return int.to_bytes(i, length=1, byteorder="little", signed=True)
+
+
+def bytes_to_str(bytes_in: bytes) -> str:
+    """
+    Returns a human readable hex representation of a byte array.
+
+    :param bytes_in: Bytes to convert
+    :return: Human readable hex representation
+    """
     str_out = ""
-    str_out
-    for b in bytes_in:
-        str_out += hex(b) + " "
+    for byte in bytes_in:
+        str_out += hex(byte) + " "
     return str_out
 
 
@@ -64,8 +85,8 @@ def escape_special_codes(raw_codes):
 
 def help():
     print("")
-    print(version)
-    print("Script for testing/debugging Nanoavionics Sat2RF1 satellite radio module")
+    print(VERSION)
+    print("Script for testing/debugging Nanoavionics Sat2RF1 satellite radio")
     print("")
     print("== Usage ==")
     print("  setmode.py [-hv] [--mode=<mode> --power=<power> --port=<port>]")
@@ -84,7 +105,7 @@ def help():
     print("  Integer in range -16 to 6, inclusive")
     print("")
     print("== Example ==")
-    print("To make the radio at '/dev/ttyUSB0' transmit a beacon at full power:")
+    print("To transmit continously at full power:")
     print("  setmode.py --mode=2 --power=6 --port=/dev/ttyUSB0")
     print("")
 
@@ -101,13 +122,18 @@ def print_response(radio: Serial) -> None:
     print(bytes_to_str(radio.readall()))
 
 
+def tcp_listener(radio: Serial) -> None:
+    print("Listening on TCP port " + TCP_PORT)
+
+
 def main(argv):
     mode = -100
     power = -100
     port = ""
+    server: bool = False
 
     try:
-        opts, args = getopt.getopt(argv,"h:v:",["mode=","power=","port="])
+        opts, args = getopt.getopt(argv, "h:v:s:", ["mode=", "power=", "port="])
 
     except getopt.GetoptError:
         help()
@@ -119,8 +145,11 @@ def main(argv):
             sys.exit()
 
         elif opt == "-v":
-            print(version)
+            print(VERSION)
             sys.exit()
+
+        elif opt == "-s":
+            server = True
 
         elif opt == "--mode":
             mode = int(arg)
@@ -147,13 +176,16 @@ def main(argv):
 
     print("Setting mode=" + str(mode) + ", power=" + str(power))
 
-    write_to_radio(radio, b'\x29' + bytes([mode]))
-    write_to_radio(radio, b'\x22' + bytes([power]))
+    write_to_radio(radio, SET_MODE + int8(mode))
+    write_to_radio(radio, SET_POWER + int8(power))
 
-    print("Response from radio:")
-    print_response()
-    
+    print_response(radio)
+
+    if server:
+        tcp_listener(radio)
+
     sys.exit()
 
+
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
