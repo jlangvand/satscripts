@@ -22,6 +22,7 @@ from serial import Serial
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 
 from setup import get_serialdevice
+from utilities import encode_freq
 
 VERSION = "setmode.py v0.3"
 
@@ -34,6 +35,7 @@ FESC = b'\xdb'
 TFEND = b'\xdc'
 TFESC = b'\xdd'
 
+SET_FREQ = b'\x20'
 SET_MODE = b'\x29'
 SET_POWER = b'\x22'
 
@@ -142,11 +144,24 @@ def tcp_listener(radio: Serial) -> None:
     s.close()
 
 
+def raw_dump(radio: Serial) -> None:
+    try:
+        while True:
+            temp = radio.readall()
+            if temp:
+                print(bytes_to_str(temp))
+            temp = None
+    except KeyboardInterrupt:
+        sys.exit(0)
+
+
 def main(argv):
-    mode = 0
-    power = -16
-    port = ""
+    mode: int = 0
+    power: int = -16
+    port: str = ""
     server: bool = False
+    dump: bool = False
+    freq: float = 435.000
 
     try:
         opts, args = getopt.getopt(argv,
@@ -154,7 +169,9 @@ def main(argv):
                                    ["mode=",
                                     "power=",
                                     "port=",
+                                    "freq=",
                                     "server",
+                                    "dump",
                                     ])
 
     except getopt.GetoptError:
@@ -182,6 +199,12 @@ def main(argv):
         elif opt == "--port":
             port = arg
 
+        elif opt == "--freq":
+            freq = float(arg)
+
+        elif opt == "--dump":
+            dump = True
+
     if port == "":
         print("Enter a valid serial device with --port=<port>")
         sys.exit(1)
@@ -194,14 +217,22 @@ def main(argv):
         print("Power out of range (-16 to 6)")
         sys.exit(1)
 
+    if freq < 435.000 or freq > 438.000:
+        print("Frequency out of range (435-438MHz)")
+        sys.exit(1)
+
     radio = get_serialdevice(port)
 
     print("Setting mode=" + str(mode) + ", power=" + str(power))
 
     write_to_radio(radio, SET_MODE + int8(mode))
     write_to_radio(radio, SET_POWER + int8(power))
+    write_to_radio(radio, SET_FREQ + encode_freq(freq))
 
     print_response(radio)
+
+    if dump:
+        raw_dump(radio)
 
     if server:
         tcp_listener(radio)
