@@ -147,7 +147,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv,
                                    "h:v:s:",
-                                   ["mode=", "power=", "port="])
+                                   ["mode=",
+                                    "power=",
+                                    "port=",
+                                    "server",
+                                    ])
 
     except getopt.GetoptError:
         help()
@@ -162,7 +166,7 @@ def main(argv):
             print(VERSION)
             sys.exit()
 
-        elif opt == "-s":
+        elif opt == "--server":
             server = True
 
         elif opt == "--mode":
